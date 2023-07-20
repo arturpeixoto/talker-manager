@@ -1,6 +1,13 @@
 const express = require('express');
 const { getAllTalkers } = require('../utils/getAllTalkers');
 const { getTalkerById } = require('../utils/getTalkerById');
+const { postTalker } = require('../utils/postTalker');
+const checkName = require('../middlewares/checkName');
+const checkAge = require('../middlewares/checkAge');
+const checkTalk = require('../middlewares/checkTalk');
+const checkWatchedAt = require('../middlewares/checkWatchedAt');
+const checkRate = require('../middlewares/checkRate');
+const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -27,6 +34,20 @@ router.get('/:id', async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Houve algum problema interno' });
   }
+});
+
+router.post('/', 
+  auth,
+  checkName,
+  checkAge,
+  checkTalk,
+  checkWatchedAt,
+  checkRate,
+  async (req, res) => {
+    const talker = req.body;
+    const createdTalker = await postTalker(talker);
+    console.log(createdTalker);
+    res.status(201).json({ ...createdTalker });
 });
 
 module.exports = router;
