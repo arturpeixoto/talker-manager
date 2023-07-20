@@ -2,12 +2,14 @@ const express = require('express');
 const { getAllTalkers } = require('../utils/getAllTalkers');
 const { getTalkerById } = require('../utils/getTalkerById');
 const { postTalker } = require('../utils/postTalker');
+const { putTalker } = require('../utils/putTalker');
 const checkName = require('../middlewares/checkName');
 const checkAge = require('../middlewares/checkAge');
 const checkTalk = require('../middlewares/checkTalk');
 const checkWatchedAt = require('../middlewares/checkWatchedAt');
 const checkRate = require('../middlewares/checkRate');
 const auth = require('../middlewares/auth');
+const { removeTalker } = require('../utils/removeTalker');
 
 const router = express.Router();
 
@@ -46,8 +48,41 @@ router.post('/',
   async (req, res) => {
     const talker = req.body;
     const createdTalker = await postTalker(talker);
-    console.log(createdTalker);
     res.status(201).json({ ...createdTalker });
+});
+
+router.put('/:id',
+  auth,
+  checkName,
+  checkAge,
+  checkTalk,
+  checkWatchedAt,
+  checkRate,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const talker = req.body;
+      const updatedTalker = await putTalker(id, talker);
+      if (typeof updatedTalker === 'object') {
+        res.status(200).json({ ...updatedTalker });
+      } else {
+        res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+      }
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+});
+
+router.delete('/:id', 
+  auth,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      await removeTalker(id);
+      res.status(204).json();
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
 });
 
 module.exports = router;
