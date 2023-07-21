@@ -7,8 +7,8 @@ const queryTalker = async (term) => {
   try {
     const data = await fs.readFile(TALKER_FILE, 'utf-8');
     const res = JSON.parse(data);
-    const queryData = res.filter((talker) => talker.name.includes(term));
-    console.log(queryData);
+    const queryData = res
+      .filter((talker) => talker.name.toLowerCase().includes(term.toLowerCase()));
     return queryData;
   } catch (error) {
     return console.log(error);

@@ -11,6 +11,7 @@ const checkRate = require('../middlewares/checkRate');
 const auth = require('../middlewares/auth');
 const { removeTalker } = require('../utils/removeTalker');
 const { queryTalker } = require('../utils/queryTalker');
+const { filterRate } = require('../utils/filterRate');
 
 const router = express.Router();
 
@@ -27,16 +28,24 @@ router.get('/', async (req, res) => {
 router.get('/search', 
   auth,
   async (req, res) => {
-  const searchTerm = req.query.q;
-  const response = await queryTalker(searchTerm);
-  if (response === []) {
-    const talkers = await getAllTalkers();
-    res.status(200).json(talkers);
-    return;
+  try {
+    const searchTerm = req.query.q;
+    const rateNumber = req.query.rate;
+    let response;
+    if (searchTerm) {
+      response = await queryTalker(searchTerm);
+    } else {
+      response = await getAllTalkers();
+    }
+    if (rateNumber && response.length > 0) {
+      response = filterRate(response, rateNumber);
+    }
+    res
+      .status(200)
+      .json(response);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-  res
-    .status(200)
-    .json(response);
 });
 
 router.get('/:id', async (req, res) => {
