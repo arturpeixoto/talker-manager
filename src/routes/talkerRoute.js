@@ -10,8 +10,9 @@ const checkWatchedAt = require('../middlewares/checkWatchedAt');
 const checkRate = require('../middlewares/checkRate');
 const auth = require('../middlewares/auth');
 const { removeTalker } = require('../utils/removeTalker');
-const { queryTalker } = require('../utils/queryTalker');
-const { filterRate } = require('../utils/filterRate');
+const filterTalkers = require('../middlewares/filterTalkers');
+const { patchTalker } = require('../utils/patchTalker');
+const checkBodyRate = require('../middlewares/checkBodyRate');
 
 const router = express.Router();
 
@@ -27,25 +28,11 @@ router.get('/', async (req, res) => {
 
 router.get('/search', 
   auth,
+  filterTalkers,
   async (req, res) => {
-  try {
-    const searchTerm = req.query.q;
-    const rateNumber = req.query.rate;
-    let response;
-    if (searchTerm) {
-      response = await queryTalker(searchTerm);
-    } else {
-      response = await getAllTalkers();
-    }
-    if (rateNumber && response.length > 0) {
-      response = filterRate(response, rateNumber);
-    }
-    res
-      .status(200)
-      .json(response);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+  res
+    .status(200)
+    .json(req.array);
 });
 
 router.get('/:id', async (req, res) => {
@@ -62,6 +49,20 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: 'Houve algum problema interno' });
   }
 });
+
+router.patch('/rate/:id', 
+  auth,
+  checkBodyRate,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { rate } = req.body;
+      await patchTalker(id, rate);
+      res.status(204).json();
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+}); 
 
 router.post('/', 
   auth,

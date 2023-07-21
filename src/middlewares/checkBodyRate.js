@@ -1,5 +1,5 @@
 module.exports = (req, res, next) => {
-  const { rate } = req.body.talk;
+  const { rate } = req.body;
   if (rate === undefined) {
     return res
       .status(400)
