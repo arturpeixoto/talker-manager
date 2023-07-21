@@ -13,6 +13,7 @@ const { removeTalker } = require('../utils/removeTalker');
 const filterTalkers = require('../middlewares/filterTalkers');
 const { patchTalker } = require('../utils/patchTalker');
 const checkBodyRate = require('../middlewares/checkBodyRate');
+const talkersDB = require('../db/talkersDB');
 
 const router = express.Router();
 
@@ -35,6 +36,21 @@ router.get('/search',
     .json(req.array);
 });
 
+router.get('/db', 
+  async (_req, res) => {
+  try {
+    const [result] = await talkersDB.findAll();
+    const resultJSON = result.map((each) => {
+      const talk = { rate: each.talk_rate, watchedAt: each.talk_watched_at };
+      return { name: each.name, age: each.age, id: each.id, talk };
+    });    
+    res.status(200).json(resultJSON);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.sqlMessage });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -45,7 +61,6 @@ router.get('/:id', async (req, res) => {
       res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
     }
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: 'Houve algum problema interno' });
   }
 });
